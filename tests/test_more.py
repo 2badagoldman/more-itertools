@@ -1109,6 +1109,35 @@ class BucketTests(TestCase):
         self.assertEqual(list(D[20]), [])
         self.assertEqual(list(D[30]), [30, 31, 33])
 
+    def test_missing_key_not_added(self):
+        key = lambda x: 10 * (x // 10)
+
+        # Membership test for a missing key
+        D = mi.bucket([10, 20, 11, 21], key=key)
+        self.assertNotIn(30, D)
+        self.assertEqual(set(D), {10, 20})
+
+        # Lookup of a missing key
+        D = mi.bucket([10, 20, 11, 21], key=key)
+        self.assertEqual(list(D[30]), [])
+        self.assertEqual(set(D), {10, 20})
+        self.assertEqual(list(D[30]), [])
+
+        # Validator that accepts the missing key
+        D = mi.bucket([10, 20, 11, 21], key=key, validator=lambda x: x > 0)
+        self.assertNotIn(30, D)
+        self.assertEqual(list(D[30]), [])
+        self.assertEqual(set(D), {10, 20})
+        self.assertEqual(list(D[10]), [10, 11])
+        self.assertEqual(list(D[20]), [20, 21])
+
+        # Missing lookups after the source is exhausted
+        D = mi.bucket([10, 20, 11, 21], key=key)
+        self.assertEqual(set(D), {10, 20})
+        self.assertNotIn(30, D)
+        self.assertEqual(list(D[30]), [])
+        self.assertEqual(set(D), {10, 20})
+
 
 class SpyTests(TestCase):
     """Tests for ``spy()``"""
