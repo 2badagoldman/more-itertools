@@ -72,13 +72,70 @@ class ChunkedTests(TestCase):
         )
 
     def test_negative(self):
-        """Test that a negative ``n`` raises a clear ``ValueError``, matching
-        the behavior of :func:`sliced`."""
-        self.assertRaisesRegex(
-            ValueError,
-            "n must be at least 0",
-            lambda: list(mi.chunked('ABCDE', -1)),
+        """Test that a negative ``n`` raises a ``ValueError`` at call time,
+        with and without strict mode."""
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                with self.assertRaisesRegex(
+                    ValueError, 'n must be a positive integer or None'
+                ):
+                    mi.chunked('abc', -2, strict=strict)
+
+    def test_zero(self):
+        """Test that ``n=0`` raises a ``ValueError`` at call time, with and
+        without strict mode."""
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                with self.assertRaisesRegex(
+                    ValueError, 'n must be a positive integer or None'
+                ):
+                    mi.chunked('abc', 0, strict=strict)
+
+    def test_none_single_chunk_strict_false(self):
+        """Test that ``n=None`` returns the whole iterable as one chunk."""
+        self.assertEqual(list(mi.chunked('abc', None)), [['a', 'b', 'c']])
+
+    def test_none_single_chunk_strict_true(self):
+        """Test that ``n=None`` with strict mode is still rejected."""
+        with self.assertRaisesRegex(ValueError, 'must not be None'):
+            mi.chunked('abc', None, strict=True)
+
+    def test_normal_sizes(self):
+        """Test even and uneven splits with strict=False."""
+        self.assertEqual(
+            list(mi.chunked('abcde', 2)), [['a', 'b'], ['c', 'd'], ['e']]
         )
+        self.assertEqual(
+            list(mi.chunked('abcd', 2)), [['a', 'b'], ['c', 'd']]
+        )
+        self.assertEqual(list(mi.chunked('abc', 1)), [['a'], ['b'], ['c']])
+        self.assertEqual(list(mi.chunked('abc', 5)), [['a', 'b', 'c']])
+        self.assertEqual(list(mi.chunked([], 3)), [])
+
+    def test_strict_uneven_raises(self):
+        """Test that strict=True raises on an uneven final chunk."""
+        with self.assertRaisesRegex(ValueError, 'not divisible by n'):
+            list(mi.chunked('abcde', 2, strict=True))
+
+    def test_index_types(self):
+        """Test that any object supporting ``__index__`` is accepted."""
+
+        class Index:
+            def __index__(self):
+                return 2
+
+        self.assertEqual(
+            list(mi.chunked('abcd', Index())), [['a', 'b'], ['c', 'd']]
+        )
+
+    def test_non_integer_types(self):
+        """Test that floats, strings and bools raise ``ValueError``."""
+        for n in (3.0, 2.5, '3', True, False):
+            with self.subTest(n=n):
+                with self.assertRaisesRegex(ValueError, 'positive integer'):
+                    mi.chunked('abc', n)
+                with self.assertRaisesRegex(ValueError, 'positive integer'):
+                    mi.chunked('abc', n, strict=True)
 
     def test_strict_false(self):
         """Test when ``n`` does not divide evenly into the length of the
