@@ -32,6 +32,7 @@ from random import random, randrange, shuffle, uniform
 from operator import (
     attrgetter,
     getitem,
+    index,
     is_not,
     itemgetter,
     lt,
@@ -230,9 +231,22 @@ def chunked(iterable, n, strict=False):
     ``True``, then ``ValueError`` will be raised before the last
     list is yielded.
 
+    *n* must be a positive integer or ``None``; ``None`` puts the whole
+    iterable into a single list. A ``TypeError`` is raised if *n* is a
+    non-integer (including floats and bools), and a ``ValueError`` is raised
+    if *n* is zero or negative.
+
     """
-    if n is not None and n < 0:
-        raise ValueError('n must be at least 0')
+    if n is not None:
+        msg = 'n must be a positive integer or None'
+        if isinstance(n, bool):
+            raise TypeError(msg)
+        try:
+            n = index(n)
+        except TypeError:
+            raise TypeError(msg) from None
+        if n < 1:
+            raise ValueError(msg)
 
     iterator = iter(partial(take, n, iter(iterable)), [])
     if strict:
