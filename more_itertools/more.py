@@ -232,19 +232,19 @@ def chunked(iterable, n, strict=False):
     list is yielded.
 
     *n* must be a positive integer or ``None``; ``None`` puts the whole
-    iterable into a single list. A ``TypeError`` is raised if *n* is a
-    non-integer (including floats and bools), and a ``ValueError`` is raised
-    if *n* is zero or negative.
+    iterable into a single list. A ``ValueError`` is raised if *n* is not
+    a positive integer or ``None`` (including floats, strings, bools, zero
+    and negative values).
 
     """
     if n is not None:
         msg = 'n must be a positive integer or None'
         if isinstance(n, bool):
-            raise TypeError(msg)
+            raise ValueError(msg)
         try:
             n = index(n)
         except TypeError:
-            raise TypeError(msg) from None
+            raise ValueError(msg) from None
         if n < 1:
             raise ValueError(msg)
 

@@ -129,12 +129,12 @@ class ChunkedTests(TestCase):
         )
 
     def test_non_integer_types(self):
-        """Test that floats, strings and bools raise ``TypeError``."""
+        """Test that floats, strings and bools raise ``ValueError``."""
         for n in (3.0, 2.5, '3', True, False):
             with self.subTest(n=n):
-                with self.assertRaisesRegex(TypeError, 'positive integer'):
+                with self.assertRaisesRegex(ValueError, 'positive integer'):
                     mi.chunked('abc', n)
-                with self.assertRaisesRegex(TypeError, 'positive integer'):
+                with self.assertRaisesRegex(ValueError, 'positive integer'):
                     mi.chunked('abc', n, strict=True)
 
     def test_strict_false(self):
